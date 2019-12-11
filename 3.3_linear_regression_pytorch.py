@@ -17,4 +17,5 @@ data_iter = Data.DataLoader(datasets, batch_size=batch_size, shuffle=True)
 
 class LinearNet(nn.Module):
     def __init__(self, features):
-        super()
+        super(LinearNet, self)._init_()
+        
