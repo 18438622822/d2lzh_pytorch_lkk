@@ -2,7 +2,7 @@
 '''
 @Author: lkk
 @Date: 2019-11-06 22:34:02
-@LastEditTime: 2019-12-16 17:38:14
+@LastEditTime: 2019-12-17 15:25:40
 @LastEditors: lkk
 @Description: 
 '''
@@ -35,6 +35,11 @@ def data_iter(batch_size, features, labels):
             indices[i:min(i + batch_size, num_examples)])  # 类型转换为long和tensor
         yield features.index_select(0, j), labels.index_select(
             0, j)  # index_select (dim, index_list/int), dim代表那个轴 输出与输入在轴的维度上相同
+
+
+def sgd(params, lr, batch_size):  # 本函数已保存在d2lzh_pytorch包中方便以后使用
+    for param in params:
+        param.data -= lr * param.grad / batch_size  # 注意这里更改param时用的param.data
 
 
 def show_fashion_mnist(images, labels):
@@ -80,3 +85,35 @@ def load_data_fashion_mnist(batch_size):
                                             shuffle=False,
                                             num_workers=num_workers)
     return train_iter, test_iter
+
+
+def evaluate_accuracy(data_iter, net):
+    acc_sum, n = 0.0, 0
+    for x, y in data_iter:
+        acc_sum += (net(x).argmax(dim=1)==y).float().sum().item()
+        n += y.shape[0]
+    return acc_sum / n
+
+
+def train_ch3(net, train_iter, test_iter, loss, num_epochs, batch_size, params=None, lr=None, optimizer=None):
+    for epoch in range(num_epochs):
+        train_l_sum, train_acc_sum, n = 0.0, 0.0, 0
+        for x, y in train_iter:
+            y_hat = net(x)
+            l = loss(y_hat, y).sum()
+            if optimizer is not None:
+                optimizer.zero_grad()
+            elif params is not None and params[0].grad is not None:
+                for param in params:
+                    param.grad.data.zero_()
+            l.backward()
+            if optimizer is None:
+                d2l.sgd(params, lr, batch_size)
+            else:
+                optimizer.step()
+            train_l_sum += l.item()
+            train_acc_sum += (y_hat.argmax(dim=1) == y).sum().item()
+            n += y.shape[0]
+        test_acc = evaluate_accuracy(test_iter, net)
+        print('epoch %d, loss %.4f, train acc %.3f, test acc %.3f'
+              % (epoch + 1, train_l_sum / n, train_acc_sum / n, test_acc))
