@@ -2,8 +2,8 @@
 '''
 @Author: lkk
 @Date: 2019-11-06 22:34:02
-@LastEditTime: 2019-12-17 15:25:40
-@LastEditors: lkk
+@LastEditTime : 2019-12-19 09:45:49
+@LastEditors  : lkk
 @Description: 
 '''
 import sys
@@ -108,7 +108,7 @@ def train_ch3(net, train_iter, test_iter, loss, num_epochs, batch_size, params=N
                     param.grad.data.zero_()
             l.backward()
             if optimizer is None:
-                d2l.sgd(params, lr, batch_size)
+                sgd(params, lr, batch_size)
             else:
                 optimizer.step()
             train_l_sum += l.item()
